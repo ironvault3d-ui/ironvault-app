@@ -32,7 +32,7 @@ st.markdown("---")
 # --- ENTRADAS DE DATOS ---
 client_email = st.text_input("📧 Email del Cliente", placeholder="cliente@gmail.com")
 pack_selected = st.selectbox("📦 Pack Comprado", 
-                             ["MEGA PACK 8TB (Completo)", "Pack Mates", "Pack Soportes", "Pack Marvel", "Pack Anime" , "Pack Marvel"])
+                             ["MEGA PACK 8TB (Completo)", "Pack Mates", "Pack Soportes", "Pack Marvel", "Pack Anime" , "Pack DC"])
 
 # --- LÓGICA DE ENVÍO ---
 def send_email(to_email, pack_name):
@@ -108,4 +108,5 @@ if st.button("🚀 ACTIVAR ACCESO AHORA"):
                 st.error("❌ Hubo un error. Revisá la contraseña o el mail.")
 
 st.markdown("---")
+
 st.caption("IronVault Systems v1.0 - By Beto")
