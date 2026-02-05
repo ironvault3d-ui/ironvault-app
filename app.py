@@ -57,7 +57,7 @@ def send_email(to_email, pack_name):
         <h3 style="color: #00e5ff;">⚠️ PASOS OBLIGATORIOS (LEER ADJUNTO):</h3>
         <p>Para descargar los archivos sin errores, seguí la <strong>GUÍA VISUAL</strong> que te adjuntamos en este correo.</p>
         <ol>
-            <li>Mirá la imagen adjunta "Instructivo.jpg".</li>
+            <li>Mirá la imagen adjunta "Instructivo".</li>
             <li>Andá a MEGA y aceptá nuestra solicitud de amistad/colaboración.</li>
             <li>Buscá la carpeta en "Elementos Compartidos".</li>
         </ol>
@@ -110,3 +110,4 @@ if st.button("🚀 ACTIVAR ACCESO AHORA"):
 st.markdown("---")
 
 st.caption("IronVault Systems v1.0 - By Beto")
+
