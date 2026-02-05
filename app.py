@@ -4,110 +4,154 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
-import os
+from mega import Mega  # <--- IMPORTAMOS MEGA
 
-# --- CONFIGURACIÓN DE LA PÁGINA ---
+# --- CONFIGURACIÓN ---
 st.set_page_config(page_title="IronVault Admin", page_icon="🛡️", layout="centered")
 
-# --- ESTILOS VISUALES (HACKEANDO CSS) ---
+# --- ESTILOS ---
 st.markdown("""
     <style>
     .stApp {background-color: #0e1117;}
-    h1 {color: #00e5ff !important;}
+    h1 {color: #00e5ff !important; text-align: center;}
     .stButton>button {
-        background-color: #00e5ff;
-        color: black;
-        font-weight: bold;
-        width: 100%;
-        border-radius: 10px;
-        height: 60px;
+        background-color: #00e5ff; color: black; font-weight: bold;
+        width: 100%; border-radius: 10px; height: 60px; font-size: 18px;
     }
+    .stSelectbox, .stTextInput {color: white;}
     </style>
     """, unsafe_allow_html=True)
 
-# --- LOGO Y TÍTULO ---
-st.title("🛡️ IRONVAULT DISPATCHER")
+st.title("🛡️ IRONVAULT AUTO-BOT")
 st.markdown("---")
 
-# --- ENTRADAS DE DATOS ---
-client_email = st.text_input("📧 Email del Cliente", placeholder="cliente@gmail.com")
-pack_selected = st.selectbox("📦 Pack Comprado", 
-                             ["MEGA PACK 8TB (Completo)", "Pack Mates", "Pack Soportes", "Pack Marvel", "Pack Anime" , "Pack DC"])
+# ==========================================
+# 🗺️ MAPA DE CARPETAS (EDITAR ESTO)
+# Izquierda: Lo que ves en la App.
+# Derecha: EL NOMBRE EXACTO DE LA CARPETA EN MEGA.
+# ==========================================
+PACKS_MAP = {
+    "MEGA PACK 8TB (Completo)": "Bettah Creativos - 3D Printing",
+    "Pack Anime": "BT - Anime",
+    "Pack Mates & Bombillas": "PACK MATES",
+    "Pack Soportes": "PACK SOPORTES",
+    "Pack Cortantes & Torta": "PACK REPOSTERIA",
+    "Pack Universo Anime": "PACK ANIME",
+    "Pack Marvel & DC": "PACK COMICS",
+    "Pack Dragon Ball": "PACK DRAGON BALL"
+}
 
-# --- LÓGICA DE ENVÍO ---
-def send_email(to_email, pack_name):
-    # Credenciales (Vienen de los Secretos de Streamlit)
+# --- INPUTS ---
+col1, col2 = st.columns([3, 1])
+with col1:
+    client_email = st.text_input("📧 Email del Cliente")
+with col2:
+    st.write("")
+
+pack_label = st.selectbox("📦 Seleccionar Pack", list(PACKS_MAP.keys()))
+
+# --- FUNCIÓN 1: ENVIAR MAIL ---
+def send_email_func(to_email, pack_name):
     from_email = st.secrets["GMAIL_USER"]
     password = st.secrets["GMAIL_PASSWORD"]
-
-    # Configurar el mensaje
+    
     msg = MIMEMultipart()
-    msg['From'] = "IronVault 3D <" + from_email + ">"
+    msg['From'] = f"IronVault 3D <{from_email}>"
     msg['To'] = to_email
-    msg['Subject'] = f"🚀 Acceso Habilitado: {pack_name} - IronVault 3D"
+    msg['Subject'] = f"🚀 Acceso Habilitado: {pack_name}"
 
-    # Cuerpo del mail (HTML para que quede lindo)
     body = f"""
     <html>
-      <body style="background-color: #1a1a1a; color: white; font-family: Arial, sans-serif; padding: 20px;">
-        <h2 style="color: #00e5ff;">¡Bienvenido a la Bóveda! 🛡️</h2>
-        <p>Hola,</p>
-        <p>Tu acceso al <strong>{pack_name}</strong> ya está reservado.</p>
-        <hr style="border: 1px solid #333;">
-        <h3 style="color: #00e5ff;">⚠️ PASOS OBLIGATORIOS (LEER ADJUNTO):</h3>
-        <p>Para descargar los archivos sin errores, seguí la <strong>GUÍA VISUAL</strong> que te adjuntamos en este correo.</p>
-        <ol>
-            <li>Mirá la imagen adjunta "Instructivo".</li>
-            <li>Andá a MEGA y aceptá nuestra solicitud de amistad/colaboración.</li>
-            <li>Buscá la carpeta en "Elementos Compartidos".</li>
-        </ol>
-        <p>Cualquier duda, respondé este correo.</p>
-        <p><em>Equipo IronVault 3D</em></p>
+      <body style="background-color: #121212; color: #e0e0e0; font-family: sans-serif; padding: 20px;">
+        <h2 style="color: #00e5ff;">🛡️ IRONVAULT 3D</h2>
+        <p>Hola, tu acceso al <strong>{pack_name}</strong> está listo.</p>
+        <div style="background-color: #1e1e1e; padding: 15px; border-left: 4px solid #00e5ff; margin: 20px 0;">
+            <h3 style="color: #00e5ff;">⚠️ PASO FINAL:</h3>
+            <ol>
+                <li>Mirá la imagen adjunta "Instructivo".</li>
+                <li>Entrá a MEGA y <strong>aceptá nuestra solicitud</strong>.</li>
+                <li>Buscá la carpeta en "Elementos Compartidos".</li>
+            </ol>
+        </div>
       </body>
     </html>
     """
     msg.attach(MIMEText(body, 'html'))
-
-    # ADJUNTAR LA IMAGEN (Instructivo)
-    filename = "Instructivo.png" 
+    
+    # Adjuntar Imagen
     try:
-        with open(filename, "rb") as attachment:
+        with open("Instructivo.jpg", "rb") as f:
             part = MIMEBase("application", "octet-stream")
-            part.set_payload(attachment.read())
+            part.set_payload(f.read())
         encoders.encode_base64(part)
-        part.add_header("Content-Disposition", f"attachment; filename= {filename}")
+        part.add_header("Content-Disposition", 'attachment; filename="Instructivo.jpg"')
         msg.attach(part)
-    except Exception as e:
-        st.error(f"Error al adjuntar imagen: {e}")
-        return False
+    except:
+        pass # Si falla la imagen, manda el mail igual
 
-    # CONEXIÓN CON GMAIL
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(from_email, password)
-        text = msg.as_string()
-        server.sendmail(from_email, to_email, text)
+        server.sendmail(from_email, to_email, msg.as_string())
         server.quit()
         return True
     except Exception as e:
-        st.error(f"Falló el envío: {e}")
+        st.error(f"❌ Error Mail: {e}")
         return False
 
-# --- BOTÓN DE ACCIÓN ---
-if st.button("🚀 ACTIVAR ACCESO AHORA"):
-    if not client_email:
-        st.warning("⚠️ ¡Poné el mail del cliente, cabeza!")
+# --- FUNCIÓN 2: COMPARTIR EN MEGA ---
+def share_mega_folder(target_email, folder_name_in_mega):
+    mega = Mega()
+    m = mega.login(st.secrets["MEGA_EMAIL"], st.secrets["MEGA_PASSWORD"])
+    
+    # Buscar la carpeta
+    file = m.find(folder_name_in_mega)
+    
+    if file:
+        # Compartir (share_node usa el handle de la carpeta)
+        # Nivel de acceso: 0 = Read Only (Solo lectura/bajada) -> RECOMENDADO
+        # Nivel de acceso: 1 = Read/Write
+        # Nivel de acceso: 2 = Full Access
+        try:
+            # NOTA: La librería mega.py a veces es mañosa con share_node.
+            # Intentamos compartir. Si ya está compartido, puede tirar error o actualizar.
+            m.share(file[0], target_email, level=0) 
+            return True
+        except Exception as e:
+            st.error(f"❌ Error al compartir en Mega: {e}")
+            return False
     else:
-        with st.spinner("Conectando con el satélite... 🛰️"):
-            success = send_email(client_email, pack_selected)
-            if success:
-                st.success(f"✅ ¡LISTO! Mail enviado a {client_email}")
+        st.error(f"❌ No encontré la carpeta '{folder_name_in_mega}' en tu Mega.")
+        return False
+
+# --- BOTÓN DE EJECUCIÓN ---
+if st.button("🚀 AUTOMATIZAR TODO"):
+    if not client_email:
+        st.warning("Falta el mail")
+    else:
+        mega_folder_name = PACKS_MAP[pack_label]
+        
+        # Barra de progreso para dar sensación de poder
+        my_bar = st.progress(0)
+        
+        # 1. Mega Share
+        st.write("1️⃣ Conectando con Mega...")
+        mega_ok = share_mega_folder(client_email, mega_folder_name)
+        my_bar.progress(50)
+        
+        if mega_ok:
+            st.success(f"✅ Carpeta '{mega_folder_name}' compartida en Mega.")
+            
+            # 2. Email Send
+            st.write("2️⃣ Enviando Instructivo...")
+            email_ok = send_email_func(client_email, pack_label)
+            my_bar.progress(100)
+            
+            if email_ok:
+                st.success(f"✅ Mail enviado a {client_email}")
                 st.balloons()
             else:
-                st.error("❌ Hubo un error. Revisá la contraseña o el mail.")
-
-st.markdown("---")
-
-st.caption("IronVault Systems v1.0 - By Beto")
-
+                st.error("Falló el envío del mail.")
+        else:
+            st.error("Abortando envío de mail porque falló Mega.")
