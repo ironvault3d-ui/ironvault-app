@@ -80,7 +80,7 @@ def send_email_func(to_email, pack_name):
     
     # Adjuntar Imagen
     try:
-        with open("Instructivo.jpg", "rb") as f:
+        with open("Instructivo.png", "rb") as f:
             part = MIMEBase("application", "octet-stream")
             part.set_payload(f.read())
         encoders.encode_base64(part)
@@ -99,6 +99,44 @@ def send_email_func(to_email, pack_name):
     except Exception as e:
         st.error(f"❌ Error Mail: {e}")
         return False
+import streamlit as st
+from mega import Mega
+
+# --- FUNCIÓN DE LOGIN CACHEADA ---
+# Usamos @st.cache_resource para que NO se loguee cada vez que tocas un botón.
+# Se loguea una vez y guarda la conexión en memoria.
+@st.cache_resource(show_spinner="Conectando al Búnker...")
+def init_mega_connection():
+    try:
+        mega = Mega()
+        # Intentamos loguear
+        m = mega.login(st.secrets["MEGA_EMAIL"], st.secrets["MEGA_PASSWORD"])
+        return m
+    except Exception as e:
+        return None
+
+# --- TU LÓGICA DEL BOTÓN ---
+if st.button("Enviar Acceso"):
+    
+    # 1. Recuperamos la conexión activa
+    m = init_mega_connection()
+    
+    if m is None:
+        st.error("❌ Mega nos bloqueó la conexión temporalmente (Error de IP o Credenciales).")
+        st.stop() # Frenamos todo
+    
+    # 2. Si hay conexión, seguimos con el resto
+    st.write("1️⃣ Conectando con Mega... ¡OK! ✅")
+    
+    try:
+        # ACÁ VA TU LÓGICA DE BUSCAR EL ARCHIVO Y COMPARTIR
+        # file = m.find(pack_seleccionado)
+        # link = m.get_upload_link(file)
+        # st.success(f"Link generado: {link}")
+        pass 
+    except Exception as e:
+        st.error(f"Error al buscar el archivo: {e}")
+
 
 # --- FUNCIÓN 2: COMPARTIR EN MEGA ---
 def share_mega_folder(target_email, folder_name_in_mega):
